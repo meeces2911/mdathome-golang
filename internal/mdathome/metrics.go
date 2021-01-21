@@ -20,4 +20,6 @@ var (
 
 	clientRequestDurationSeconds = metrics.NewHistogram("client_request_duration_seconds")
 	clientRequestProcessSeconds  = metrics.NewHistogram("client_request_process_seconds")
+
+	cacheSizeBytesTotal = metrics.NewCounter("cache_size_bytes_total")
 )

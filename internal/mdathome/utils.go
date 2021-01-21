@@ -97,6 +97,10 @@ func backgroundWorker() {
 		cache.UpdateCacheScanInterval(clientSettings.CacheScanIntervalInSeconds)
 		cache.UpdateCacheRefreshAge(clientSettings.CacheRefreshAgeInSeconds)
 
+		// Update cache size metric
+		size, _, _ := cache.LoadCacheInfo()
+		cacheSizeBytesTotal.Set(uint64(size))
+
 		// Update server response in a goroutine
 		newServerResponse := backendPing()
 		if newServerResponse != nil {

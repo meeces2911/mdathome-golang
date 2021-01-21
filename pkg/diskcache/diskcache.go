@@ -155,7 +155,7 @@ func (c *Cache) UpdateCacheRefreshAge(cacheRefreshAge int) {
 func (c *Cache) StartBackgroundThread() {
 	for {
 		// Retrieve cache information
-		size, keys, err := c.loadCacheInfo()
+		size, keys, err := c.LoadCacheInfo()
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -207,7 +207,7 @@ func (c *Cache) StartBackgroundThread() {
 }
 
 // loadCacheInfo
-func (c *Cache) loadCacheInfo() (int, []KeyPair, error) {
+func (c *Cache) LoadCacheInfo() (int, []KeyPair, error) {
 	// Create running variables
 	totalSize := 0
 
