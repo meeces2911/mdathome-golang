@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 
-	"github.com/lflare/mdathome-golang/internal/mdathome"
+	"github.com/meeces2911/mdathome-golang/internal/mdathome"
 	"github.com/sirupsen/logrus"
 )
 
