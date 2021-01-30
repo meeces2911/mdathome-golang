@@ -2,15 +2,18 @@ package mdathome
 
 import (
 	"bytes"
+	"compress/gzip"
 	"crypto/sha256"
 	"crypto/tls"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/VictoriaMetrics/metrics"
@@ -53,6 +56,14 @@ var cache *diskcache.Cache
 var timeLastRequest time.Time
 var running = true
 var client *http.Client
+
+var gzPool = sync.Pool{
+	New: func() interface{} {
+		// The Writer doesn't matter, as we'll overwrite it later
+		w, _ := gzip.NewWriterLevel(ioutil.Discard, gzip.BestCompression)
+		return w
+	},
+}
 
 func requestHandler(w http.ResponseWriter, r *http.Request) {
 	// Start timer
@@ -291,6 +302,36 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		clientHitsTotal.Inc()
 		w.Header().Set("X-Cache", "HIT")
 
+		// Compress bytes before returning to the client
+		var gzipImgData bytes.Buffer
+		if strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
+
+			requestLogger.Debugf("Size BEFORE compression %dKB", imageLength/1024)
+
+			gz := gzPool.Get().(*gzip.Writer)
+			defer gzPool.Put(gz)
+
+			// Reset the current gzip io.Writer to our buffer
+			gz.Reset(&gzipImgData)
+			defer gz.Close()
+
+			_, err = gz.Write(imageFromCache)
+			if err != nil {
+				requestLogger.WithFields(logrus.Fields{"event": "failed", "upstream": serverResponse.ImageServer + sanitizedURL, "error": err}).Warnf("Request from %s failed downstream: %v", remoteAddr, err)
+				clientFailedTotal.Inc()
+				return
+			}
+
+			w.Header().Set("Content-Encoding", "gzip")
+			imageLength = len(gzipImgData.Bytes())
+
+			requestLogger.Debugf("Size AFTER compression %dKB", imageLength/1024)
+
+		} else {
+			// TODO: This could fail with OOM?
+			gzipImgData.Write(imageFromCache)
+		}
+
 		// Set Content-Length & Last-Modified
 		w.Header().Set("Content-Length", strconv.Itoa(imageLength))
 		w.Header().Set("Last-Modified", modTime.Format(http.TimeFormat))
@@ -302,8 +343,8 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-Time-Taken", strconv.Itoa(int(processedTime)))
 
 		// Convert bytes object into reader and send to client
-		imageReader := bytes.NewReader(imageFromCache)
-		_, err := io.Copy(w, imageReader)
+		imageReader := bytes.NewReader(gzipImgData.Bytes())
+		_, err = io.Copy(w, imageReader)
 
 		// Check if image was streamed properly
 		if err != nil {
