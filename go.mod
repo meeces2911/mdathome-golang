@@ -1,4 +1,4 @@
-module github.com/lflare/mdathome-golang
+module github.com/meeces2911/mdathome-golang
 
 go 1.14
 
