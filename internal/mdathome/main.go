@@ -324,10 +324,10 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // ShrinkDatabase initialises and shrinks the MD@Home database
-func ShrinkDatabase() {
+func ShrinkDatabase(settingsPath string) {
 	// Load & prepare client settings
-	loadClientSettings()
-	saveClientSettings()
+	loadClientSettings(settingsPath)
+	saveClientSettings(settingsPath)
 
 	// Prepare diskcache
 	log.Println("Preparing database...")
@@ -340,13 +340,13 @@ func ShrinkDatabase() {
 }
 
 // StartServer starts the MD@Home client
-func StartServer() {
+func StartServer(settingsPath string) {
 	// Check client version
 	checkClientVersion()
 
 	// Load & prepare client settings
-	loadClientSettings()
-	saveClientSettings()
+	loadClientSettings(settingsPath)
+	saveClientSettings(settingsPath)
 
 	// Initialise logger
 	initLogger(clientSettings.LogLevel, clientSettings.MaxLogSizeInMebibytes, clientSettings.MaxLogBackups, clientSettings.MaxLogAgeInDays)
@@ -397,7 +397,7 @@ func StartServer() {
 	}
 
 	// Start background worker
-	go startBackgroundWorker()
+	go startBackgroundWorker(settingsPath)
 
 	// Prepare router
 	r := mux.NewRouter()

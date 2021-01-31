@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/signal"
+	"path"
 	"syscall"
 	"time"
 
@@ -13,24 +14,24 @@ import (
 	"github.com/tcnksm/go-latest"
 )
 
-func saveClientSettings() {
+func saveClientSettings(settingsPath string) {
 	clientSettingsSampleBytes, err := json.MarshalIndent(clientSettings, "", "    ")
 	if err != nil {
 		log.Fatalln("Failed to marshal sample settings.json")
 	}
 
-	err = ioutil.WriteFile("settings.json", clientSettingsSampleBytes, 0600)
+	err = ioutil.WriteFile(path.Join(settingsPath, "settings.json"), clientSettingsSampleBytes, 0600)
 	if err != nil {
 		log.Fatalf("Failed to create sample settings.json: %v", err)
 	}
 }
 
-func loadClientSettings() {
+func loadClientSettings(settingsPath string) {
 	// Read JSON from file
-	clientSettingsJSON, err := ioutil.ReadFile("settings.json")
+	clientSettingsJSON, err := ioutil.ReadFile(path.Join(settingsPath, "settings.json"))
 	if err != nil {
 		log.Printf("Failed to read client configuration file - %v", err)
-		saveClientSettings()
+		saveClientSettings(settingsPath)
 		log.Fatalf("Created sample settings.json! Please edit it before running again!")
 	}
 
@@ -76,7 +77,7 @@ func checkClientVersion() {
 	}
 }
 
-func startBackgroundWorker() {
+func startBackgroundWorker(settingsPath string) {
 	// Wait 10 seconds
 	log.Println("Starting background jobs!")
 	time.Sleep(10 * time.Second)
@@ -84,7 +85,7 @@ func startBackgroundWorker() {
 	for running {
 		// Reload client configuration
 		log.Println("Reloading client configuration")
-		loadClientSettings()
+		loadClientSettings(settingsPath)
 
 		// Update log level if need be
 		newLogLevel, err := logrus.ParseLevel(clientSettings.LogLevel)
