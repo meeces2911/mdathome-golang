@@ -17,6 +17,7 @@ type ClientSettings struct {
 	CacheRefreshAgeInSeconds   int `json:"cache_refresh_age_in_seconds"`
 	MaxCacheScanTimeInSeconds  int `json:"max_cache_scan_time_in_seconds"`
 
+	AllowCompression        bool   `json:"allow_compression"`
 	AllowHTTP2              bool   `json:"allow_http2"`
 	AllowUpstreamPooling    bool   `json:"allow_upstream_pooling"`
 	AllowVisitorRefresh     bool   `json:"allow_visitor_refresh"`

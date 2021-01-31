@@ -37,6 +37,7 @@ var clientSettings = ClientSettings{
 	CacheRefreshAgeInSeconds:   3600, // Default 1h cache refresh age
 	MaxCacheScanTimeInSeconds:  15,   // Default 15s max scan period
 
+	AllowCompression:        true,  // Allow gzip compression on responses
 	AllowHTTP2:              true,  // Allow HTTP2 by default
 	AllowUpstreamPooling:    true,  // Allow upstream pooling by default
 	AllowVisitorRefresh:     false, // Default to not allow visitors to force-refresh images through Cache-Control
@@ -304,7 +305,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Compress bytes before returning to the client
 		var gzipImgData bytes.Buffer
-		if strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
+		if clientSettings.AllowCompression && strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
 
 			requestLogger.Debugf("Size BEFORE compression %dKB", imageLength/1024)
 
