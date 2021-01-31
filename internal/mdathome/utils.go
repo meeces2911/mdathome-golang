@@ -14,6 +14,8 @@ import (
 	"github.com/tcnksm/go-latest"
 )
 
+var existingSettings bool = false
+
 func saveClientSettings(settingsPath string) {
 	clientSettingsSampleBytes, err := json.MarshalIndent(clientSettings, "", "    ")
 	if err != nil {
@@ -30,10 +32,15 @@ func loadClientSettings(settingsPath string) {
 	// Read JSON from file
 	clientSettingsJSON, err := ioutil.ReadFile(path.Join(settingsPath, "settings.json"))
 	if err != nil {
-		log.Printf("Failed to read client configuration file - %v", err)
-		saveClientSettings(settingsPath)
-		log.Fatalf("Created sample settings.json! Please edit it before running again!")
+		if existingSettings {
+			log.Fatalf("Failed to read client configuration file - %v", err)
+		} else {
+			log.Printf("Failed to read client configuration file - %v", err)
+			saveClientSettings(settingsPath)
+			log.Fatalf("Created sample settings.json! Please edit it before running again!")
+		}
 	}
+	existingSettings = true
 
 	// Unmarshal JSON to clientSettings struct
 	err = json.Unmarshal(clientSettingsJSON, &clientSettings)
